@@ -22,6 +22,7 @@ class ModelConfig(BaseModel):
         text: dict[str, str] - Text config e.g. {"verbosity": "low"}.
         max_output_tokens: int | None - Max output tokens override for this model.
         parallel_tool_calls: bool | None - Enable parallel tool calls.
+        strip_tool_choice: bool - Strip tool_choice from requests (for providers that reject it in thinking mode).
         image_mode: str - How to handle images: "input_image", "save_and_ref", or "strip".
         image_dir: str | None - Directory to save images when using save_and_ref mode.
         system_replacements: dict[str, str] - String replacements applied to system prompt (key=target, value=replacement).
@@ -40,6 +41,7 @@ class ModelConfig(BaseModel):
     text: dict[str, str] = Field(default_factory=dict)
     max_output_tokens: Optional[int] = None
     parallel_tool_calls: Optional[bool] = None
+    strip_tool_choice: bool = False
     image_mode: str = "input_image"
     image_dir: Optional[str] = None
     system_replacements: dict[str, str] = Field(default_factory=dict)
@@ -134,6 +136,7 @@ class ResolvedRoute:
         self.text = model_config.text
         self.max_output_tokens = model_config.max_output_tokens
         self.parallel_tool_calls = model_config.parallel_tool_calls
+        self.strip_tool_choice = model_config.strip_tool_choice
         self.image_mode = model_config.image_mode
         self.image_dir = model_config.image_dir
 

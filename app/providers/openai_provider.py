@@ -48,7 +48,7 @@ def _build_request_body(request: AnthropicRequest, route: ResolvedRoute) -> dict
         dict[str, Any] - The provider-specific request body.
     """
     if route.use_responses:
-        return to_openai_responses_request(
+        body = to_openai_responses_request(
             request,
             route.model_id,
             inject_context=route.inject_context,
@@ -61,11 +61,17 @@ def _build_request_body(request: AnthropicRequest, route: ResolvedRoute) -> dict
             image_mode=route.image_mode,
             image_dir=route.image_dir,
         )
-    return to_openai_chat_request(
-        request,
-        route.model_id,
-        max_output_tokens=route.max_output_tokens,
-    )
+    else:
+        body = to_openai_chat_request(
+            request,
+            route.model_id,
+            max_output_tokens=route.max_output_tokens,
+        )
+
+    if route.strip_tool_choice:
+        body.pop("tool_choice", None)
+
+    return body
 
 
 async def send_non_streaming(
