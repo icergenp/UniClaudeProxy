@@ -112,7 +112,17 @@ class LocalOnlyMiddleware(BaseHTTPMiddleware):
 
 
 app.add_middleware(LocalOnlyMiddleware)
+@app.head("/")
+async def root_head():
+    return JSONResponse(status_code=200, content={})
 
+
+@app.get("/")
+async def root_get():
+    return {
+        "status": "ok",
+        "provider": "UniClaudeProxy"
+    }
 
 @app.post("/v1/messages")
 async def create_message(request: Request) -> Any:
