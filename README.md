@@ -64,7 +64,7 @@ Claude Code CLI  -->  UniClaudeProxy (localhost:9223)  -->  Any LLM Provider
 - **Automatic Hot Reload** — Edit `config.json` and the proxy picks up changes instantly via filesystem watcher — no restart needed
 - **Image Support** — Three modes: `input_image` (inline base64), `save_and_ref` (save to disk + reference), or `strip` (remove images for text-only models)
 - **Custom Headers** — Per-provider custom headers for authentication, routing, or any other need
-- **Extra OpenAI Parameters** — Pass `reasoning`, `truncation`, `text`, `parallel_tool_calls`, and other provider-specific parameters per-model
+- **Extra OpenAI Parameters** — Pass `reasoning`, `truncation`, `text`, `parallel_tool_calls`, `strip_tool_choice`, and other provider-specific parameters per-model
 - **Tool Name Mapping** — Map upstream tool names to Claude Code names (e.g., `shell_call` -> `Bash`)
 - **Force Stream Mode** — For providers that always return SSE, consume internally and return as non-streaming when needed
 - **Gemini thoughtSignature Round-Trip** — Properly encodes and decodes Gemini's `thoughtSignature` through tool call IDs for multi-turn thinking conversations
@@ -205,6 +205,7 @@ Each model entry under a provider supports these fields:
 | `text` | object | {} | Text config (e.g. `{"verbosity": "low"}`) |
 | `max_output_tokens` | int | null | Override max output tokens |
 | `parallel_tool_calls` | bool | null | Enable parallel tool calls |
+| `strip_tool_choice` | bool | false | Drop outgoing `tool_choice` for providers that reject it in thinking mode |
 | `image_mode` | string | `"input_image"` | `"input_image"`, `"save_and_ref"`, or `"strip"` |
 | `image_dir` | string | null | Custom directory for saved images |
 | `system_replacements` | object | {} | String replacements on system prompt (key=target, value=replacement) |

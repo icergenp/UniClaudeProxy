@@ -26,7 +26,8 @@
         },
         "deepseek-reasoner": {
           "name": "DeepSeek R1",
-          "max_output_tokens": 16384
+          "max_output_tokens": 16384,
+          "strip_tool_choice": false
         }
       }
     },

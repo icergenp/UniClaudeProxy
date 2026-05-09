@@ -146,6 +146,29 @@ def _convert_content_to_openai_messages(content: Any) -> list[dict[str, Any]]:
     return parts if parts else [{"type": "text", "text": ""}]
 
 
+def _fix_schema(schema: Any) -> Any:
+    """Return a copy of a JSON Schema with OpenAI-compatible array definitions.
+
+    OpenAI-compatible validators reject array schemas that omit ``items`` even
+    though some looser providers accept them.
+    """
+    if isinstance(schema, list):
+        return [_fix_schema(item) for item in schema]
+
+    if not isinstance(schema, dict):
+        return schema
+
+    fixed = {key: _fix_schema(value) for key, value in schema.items()}
+    schema_type = fixed.get("type")
+    is_array = schema_type == "array" or (
+        isinstance(schema_type, list) and "array" in schema_type
+    )
+    if is_array and "items" not in fixed:
+        fixed["items"] = {}
+
+    return fixed
+
+
 ANTHROPIC_BUILTIN_TOOL_TYPES = {
     "computer_20241022",
     "text_editor_20241022",
@@ -178,7 +201,7 @@ def _convert_tools_to_openai_chat(tools: list[AnthropicToolDef]) -> list[dict[st
             "function": {
                 "name": tool_dict.get("name", ""),
                 "description": tool_dict.get("description", ""),
-                "parameters": tool_dict.get("input_schema", {}),
+                "parameters": _fix_schema(tool_dict.get("input_schema") or {}),
             },
         })
     return openai_tools
@@ -205,7 +228,7 @@ def _convert_tools_to_openai_responses(tools: list[AnthropicToolDef]) -> list[di
             "type": "function",
             "name": tool_dict.get("name", ""),
             "description": tool_dict.get("description", ""),
-            "parameters": tool_dict.get("input_schema", {}),
+            "parameters": _fix_schema(tool_dict.get("input_schema") or {}),
         })
     return openai_tools
 

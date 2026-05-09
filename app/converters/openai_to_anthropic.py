@@ -97,7 +97,7 @@ def from_openai_chat_response(
     content_blocks: list[dict[str, Any]] = []
     finish_reason = "stop"
 
-    choices = response_data.get("choices", [])
+    choices = response_data.get("choices") or []
     if choices:
         choice = choices[0]
         message = choice.get("message", {})
@@ -126,7 +126,7 @@ def from_openai_chat_response(
                 "text": text,
             })
 
-        tool_calls = message.get("tool_calls", [])
+        tool_calls = message.get("tool_calls") or []
         for tc in tool_calls:
             func = tc.get("function", {})
             try:
@@ -136,7 +136,7 @@ def from_openai_chat_response(
 
             content_blocks.append({
                 "type": "tool_use",
-                "id": tc.get("id", _generate_content_block_id()),
+                "id": _fc_to_toolu(tc.get("id") or _generate_content_block_id()),
                 "name": func.get("name", ""),
                 "input": args,
             })
@@ -312,7 +312,7 @@ def _build_content_block_start_event(index: int, block_type: str = "text", **kwa
     elif block_type == "tool_use":
         content_block = {
             "type": "tool_use",
-            "id": kwargs.get("tool_id", _generate_content_block_id()),
+            "id": _fc_to_toolu(kwargs.get("tool_id") or _generate_content_block_id()),
             "name": kwargs.get("name", ""),
             "input": {},
         }
@@ -484,7 +484,7 @@ async def stream_openai_chat_to_anthropic(
             if usage_data:
                 output_tokens = usage_data.get("completion_tokens", output_tokens)
 
-            choices = data.get("choices", [])
+            choices = data.get("choices") or []
             if not choices:
                 continue
 
@@ -518,7 +518,7 @@ async def stream_openai_chat_to_anthropic(
             if reasoning_content and not delta_content and not delta.get("tool_calls"):
                 continue
 
-            tool_calls = delta.get("tool_calls", [])
+            tool_calls = delta.get("tool_calls") or []
             for tc in tool_calls:
                 tc_index = tc.get("index", 0)
 
