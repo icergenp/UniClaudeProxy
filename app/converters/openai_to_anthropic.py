@@ -112,9 +112,9 @@ def from_openai_chat_response(
 
         elif isinstance(content, list):
             text = "".join(
-                part.get("text", "")
+                part if isinstance(part, str) else str(part.get("text", ""))
                 for part in content
-                if isinstance(part, dict)
+                if isinstance(part, str) or (isinstance(part, dict) and part.get("text") is not None)
             )
 
         elif content is not None:
@@ -123,7 +123,7 @@ def from_openai_chat_response(
         if text:
             content_blocks.append({
                 "type": "text",
-                "text": text
+                "text": text,
             })
 
         tool_calls = message.get("tool_calls", [])
@@ -513,9 +513,9 @@ async def stream_openai_chat_to_anthropic(
                 or delta.get("reasoning")
             )
 
-            # ignore reasoning-only chunks entirely
-            # claude code breaks on these for some providers
-            if reasoning_content and not delta.get("content"):
+            # Ignore provider-specific reasoning chunks that carry no Anthropic-compatible
+            # content. Some Claude-compatible clients reject unsigned thinking blocks.
+            if reasoning_content and not delta_content and not delta.get("tool_calls"):
                 continue
 
             tool_calls = delta.get("tool_calls", [])

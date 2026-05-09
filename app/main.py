@@ -6,7 +6,7 @@ from contextlib import asynccontextmanager
 from typing import Any
 
 from fastapi import FastAPI, Request
-from fastapi.responses import JSONResponse, PlainTextResponse, StreamingResponse
+from fastapi.responses import JSONResponse, PlainTextResponse, Response, StreamingResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 
 from app.config import config_path, load_config, reload_config, resolve_route
@@ -112,17 +112,20 @@ class LocalOnlyMiddleware(BaseHTTPMiddleware):
 
 
 app.add_middleware(LocalOnlyMiddleware)
+
+
 @app.head("/")
 async def root_head():
-    return JSONResponse(status_code=200, content={})
+    return Response(status_code=200)
 
 
 @app.get("/")
 async def root_get():
     return {
         "status": "ok",
-        "provider": "UniClaudeProxy"
+        "provider": "UniClaudeProxy",
     }
+
 
 @app.post("/v1/messages")
 async def create_message(request: Request) -> Any:
