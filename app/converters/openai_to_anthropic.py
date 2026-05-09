@@ -136,7 +136,7 @@ def from_openai_chat_response(
 
             content_blocks.append({
                 "type": "tool_use",
-                "id": _fc_to_toolu(tc.get("id", _generate_content_block_id())),
+                "id": _fc_to_toolu(tc.get("id") or _generate_content_block_id()),
                 "name": func.get("name", ""),
                 "input": args,
             })
@@ -312,7 +312,7 @@ def _build_content_block_start_event(index: int, block_type: str = "text", **kwa
     elif block_type == "tool_use":
         content_block = {
             "type": "tool_use",
-            "id": _fc_to_toolu(kwargs.get("tool_id", _generate_content_block_id())),
+            "id": _fc_to_toolu(kwargs.get("tool_id") or _generate_content_block_id()),
             "name": kwargs.get("name", ""),
             "input": {},
         }
