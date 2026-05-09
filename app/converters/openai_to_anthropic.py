@@ -103,9 +103,28 @@ def from_openai_chat_response(
         message = choice.get("message", {})
         finish_reason = choice.get("finish_reason", "stop")
 
-        text = message.get("content")
+        content = message.get("content", "")
+
+        text = ""
+
+        if isinstance(content, str):
+            text = content
+
+        elif isinstance(content, list):
+            text = "".join(
+                part if isinstance(part, str) else str(part.get("text", ""))
+                for part in content
+                if isinstance(part, str) or (isinstance(part, dict) and part.get("text") is not None)
+            )
+
+        elif content is not None:
+            text = str(content)
+
         if text:
-            content_blocks.append({"type": "text", "text": text})
+            content_blocks.append({
+                "type": "text",
+                "text": text,
+            })
 
         tool_calls = message.get("tool_calls", [])
         for tc in tool_calls:
@@ -489,23 +508,15 @@ async def stream_openai_chat_to_anthropic(
                     started = True
                 yield _build_text_delta_event(text_block_index, delta_content)
 
-            reasoning_content = delta.get("reasoning_content")
-            if reasoning_content:
-                if text_block_started:
-                    yield _build_content_block_stop_event(text_block_index)
-                    text_block_started = False
+            reasoning_content = (
+                delta.get("reasoning_content")
+                or delta.get("reasoning")
+            )
 
-                if not thinking_block_started:
-                    thinking_block_index = next_index
-                    next_index += 1
-                    yield _build_content_block_start_event(thinking_block_index, "thinking")
-                    thinking_block_started = True
-                    started = True
-                yield _sse_event("content_block_delta", {
-                    "type": "content_block_delta",
-                    "index": thinking_block_index,
-                    "delta": {"type": "thinking_delta", "thinking": reasoning_content}
-                })
+            # Ignore provider-specific reasoning chunks that carry no Anthropic-compatible
+            # content. Some Claude-compatible clients reject unsigned thinking blocks.
+            if reasoning_content and not delta_content and not delta.get("tool_calls"):
+                continue
 
             tool_calls = delta.get("tool_calls", [])
             for tc in tool_calls:
