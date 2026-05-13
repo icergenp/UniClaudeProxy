@@ -1,4 +1,5 @@
 import json as _json
+import logging
 from typing import Any, Optional
 
 from app.config import load_optimized_system_prompt
@@ -9,6 +10,9 @@ from app.models import (
     AnthropicRequest,
     AnthropicToolDef,
 )
+
+
+debug_logger = logging.getLogger("uniclaudeproxy.debug")
 
 
 def _toolu_to_fc(tool_id: str) -> str:
@@ -88,7 +92,9 @@ def _resolved_system_prompt(request: AnthropicRequest) -> Optional[str]:
     system_prompt = _extract_system_prompt(request)
     if not system_prompt:
         return None
-    return load_optimized_system_prompt()
+    resolved_prompt = load_optimized_system_prompt()
+    debug_logger.info("FINAL SYSTEM PROMPT (OpenAI):\n%s", resolved_prompt)
+    return resolved_prompt
 
 
 def _convert_content_to_openai_messages(content: Any) -> list[dict[str, Any]]:

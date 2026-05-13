@@ -1,4 +1,5 @@
 import json as _json
+import logging
 from typing import Any
 from urllib.parse import unquote
 
@@ -6,6 +7,9 @@ from app.config import load_optimized_system_prompt
 from app.converters.gemini_to_anthropic import THOUGHT_SIG_SEP
 from app.models import AnthropicRequest
 from app.utils.images import detect_media_type
+
+
+debug_logger = logging.getLogger("uniclaudeproxy.debug")
 
 
 def _extract_system_prompt(request: AnthropicRequest) -> str | None:
@@ -50,7 +54,9 @@ def _resolved_system_prompt(request: AnthropicRequest) -> str | None:
     system_prompt = _extract_system_prompt(request)
     if not system_prompt:
         return None
-    return load_optimized_system_prompt()
+    resolved_prompt = load_optimized_system_prompt()
+    debug_logger.info("FINAL SYSTEM PROMPT (Gemini):\n%s", resolved_prompt)
+    return resolved_prompt
 
 
 _STRIP_SCHEMA_KEYS = frozenset({

@@ -204,22 +204,6 @@ async def create_message(request: Request) -> Any:
                     elif btype == "text":
                         debug_logger.info("    BLOCK[%d] text=%s", j, str(block.get("text", ""))[:200])
 
-    replacements = route.model_config.system_replacements
-    if replacements:
-        system = body.get("system")
-        if isinstance(system, str):
-            for target, replacement in replacements.items():
-                system = system.replace(target, replacement)
-            body["system"] = system
-        elif isinstance(system, list):
-            for idx, block in enumerate(system):
-                if isinstance(block, dict) and block.get("type") == "text":
-                    txt = block.get("text", "")
-                    for target, replacement in replacements.items():
-                        txt = txt.replace(target, replacement)
-                    system[idx] = {**block, "text": txt}
-            body["system"] = system
-
     use_react = route.model_config.use_react
     if use_react:
         debug_logger.info("REACT: enabled for model %s", anthropic_model)
