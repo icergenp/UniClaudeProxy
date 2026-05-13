@@ -74,7 +74,6 @@ ANTHROPIC_BASE_URL=http://127.0.0.1:9223 claude
 
 ```bash
 tail -f debug.log
-tail -f system_prompts.log
 ```
 
 ### Tests / linting
@@ -226,7 +225,6 @@ This mainly affects OpenAI Responses-style requests and any provider/model confi
 - The server defaults to `127.0.0.1:9223` with `local_only: true`, so non-local traffic is rejected unless config changes.
 - `start.sh` is environment-specific: it also checks `http://127.0.0.1:8789` and may try to launch `~/code/wesee/ai-scripts/cproxy.sh`. Do not assume this script is portable across machines.
 - `debug.log` is truncated on startup by `app/main.py`; if you need old logs, save them before restarting.
-- `system_prompts.log` is only populated when `system_replacements` logic is active.
 - `system_prompt_cn_optimized.md` exists in the repo root but is not referenced by the current runtime code paths.
 
 ## Where to look first when changing behavior

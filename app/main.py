@@ -43,13 +43,6 @@ _debug_handler.setFormatter(logging.Formatter("%(asctime)s %(message)s"))
 debug_logger.addHandler(_debug_handler)
 debug_logger.propagate = False
 
-system_logger = logging.getLogger("uniclaudeproxy.system")
-system_logger.setLevel(logging.DEBUG)
-_system_handler = logging.FileHandler(os.path.join(_BASE_DIR, "..", "system_prompts.log"), mode="a", encoding="utf-8")
-_system_handler.setFormatter(logging.Formatter("%(asctime)s %(message)s"))
-system_logger.addHandler(_system_handler)
-system_logger.propagate = False
-
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -214,8 +207,6 @@ async def create_message(request: Request) -> Any:
     replacements = route.model_config.system_replacements
     if replacements:
         system = body.get("system")
-        if system is not None:
-            system_logger.info("ORIGINAL SYSTEM PROMPT:\n%s", json.dumps(system, indent=2, default=str))
         if isinstance(system, str):
             for target, replacement in replacements.items():
                 system = system.replace(target, replacement)
