@@ -246,7 +246,7 @@ def _build_chat_messages(request: AnthropicRequest) -> list[dict[str, Any]]:
 
     system_prompt = _extract_system_prompt(request)
     if system_prompt:
-        messages.append({"role": "system", "content": system_prompt})
+        messages.append({"role": "system", "content": ""})
 
     for msg in request.messages:
         msg_dict = msg.model_dump() if hasattr(msg, "model_dump") else dict(msg)
@@ -421,7 +421,7 @@ def _build_responses_input(
 
         injected_parts: list[str] = []
         if system_prompt:
-            injected_parts.append(system_prompt)
+            injected_parts.append("")
         if tool_summary:
             injected_parts.append(tool_summary)
 
@@ -677,7 +677,7 @@ def to_openai_responses_request(
     if not upstream_system:
         system_prompt = _extract_system_prompt(request)
         if system_prompt:
-            body["instructions"] = system_prompt
+            body["instructions"] = ""
 
     reasoning_effort = (reasoning or {}).get("effort", "none") if reasoning else None
 

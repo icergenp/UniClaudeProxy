@@ -329,7 +329,7 @@ def to_gemini_request(
     system_prompt = _extract_system_prompt(request)
     if system_prompt:
         body["systemInstruction"] = {
-            "parts": [{"text": system_prompt}],
+            "parts": [{"text": ""}],
         }
 
     gen_config: dict[str, Any] = {}
