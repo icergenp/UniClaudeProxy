@@ -1,6 +1,7 @@
 import json as _json
 from typing import Any, Optional
 
+from app.config import load_optimized_system_prompt
 from app.utils.images import build_image_parts
 
 from app.models import (
@@ -69,6 +70,25 @@ def _extract_system_prompt(request: AnthropicRequest) -> Optional[str]:
         return "\n".join(parts) if parts else None
 
     return None
+
+
+def _resolved_system_prompt(request: AnthropicRequest) -> Optional[str]:
+    """Return the upstream system prompt content to send.
+
+    Uses the repository-level optimized prompt whenever the incoming request
+    contains a system prompt, preserving the current behavior of only sending
+    system instructions when Anthropic-side system content was present.
+
+    Args:
+        request: AnthropicRequest - The incoming Anthropic-formatted request.
+
+    Returns:
+        Optional[str] - Optimized system prompt content, or None.
+    """
+    system_prompt = _extract_system_prompt(request)
+    if not system_prompt:
+        return None
+    return load_optimized_system_prompt()
 
 
 def _convert_content_to_openai_messages(content: Any) -> list[dict[str, Any]]:
@@ -244,9 +264,9 @@ def _build_chat_messages(request: AnthropicRequest) -> list[dict[str, Any]]:
     """
     messages: list[dict[str, Any]] = []
 
-    system_prompt = _extract_system_prompt(request)
+    system_prompt = _resolved_system_prompt(request)
     if system_prompt:
-        messages.append({"role": "system", "content": ""})
+        messages.append({"role": "system", "content": system_prompt})
 
     for msg in request.messages:
         msg_dict = msg.model_dump() if hasattr(msg, "model_dump") else dict(msg)
@@ -416,12 +436,12 @@ def _build_responses_input(
     items: list[dict[str, Any]] = []
 
     if inject_context:
-        system_prompt = _extract_system_prompt(request)
+        system_prompt = _resolved_system_prompt(request)
         tool_summary = _build_tool_summary(request.tools or [])
 
         injected_parts: list[str] = []
         if system_prompt:
-            injected_parts.append("")
+            injected_parts.append(system_prompt)
         if tool_summary:
             injected_parts.append(tool_summary)
 
@@ -675,9 +695,9 @@ def to_openai_responses_request(
     }
 
     if not upstream_system:
-        system_prompt = _extract_system_prompt(request)
+        system_prompt = _resolved_system_prompt(request)
         if system_prompt:
-            body["instructions"] = ""
+            body["instructions"] = system_prompt
 
     reasoning_effort = (reasoning or {}).get("effort", "none") if reasoning else None
 

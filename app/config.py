@@ -177,6 +177,24 @@ def config_path() -> str:
     return _config_path or str(Path(__file__).parent.parent / "config.json")
 
 
+def optimized_system_prompt_path() -> str:
+    """Return the resolved path to the optimized system prompt markdown file.
+
+    Returns:
+        str - Absolute path to the optimized system prompt file.
+    """
+    return str(Path(__file__).parent.parent / "system_prompt_cn_optimized.md")
+
+
+def load_optimized_system_prompt() -> str:
+    """Load the optimized system prompt markdown from disk.
+
+    Returns:
+        str - The optimized system prompt content.
+    """
+    return Path(optimized_system_prompt_path()).read_text(encoding="utf-8").strip()
+
+
 def load_config(path: Optional[str] = None) -> AppConfig:
     """Load and parse the application configuration from disk.
 

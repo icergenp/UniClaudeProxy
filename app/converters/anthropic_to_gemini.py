@@ -2,6 +2,7 @@ import json as _json
 from typing import Any
 from urllib.parse import unquote
 
+from app.config import load_optimized_system_prompt
 from app.converters.gemini_to_anthropic import THOUGHT_SIG_SEP
 from app.models import AnthropicRequest
 from app.utils.images import detect_media_type
@@ -32,6 +33,24 @@ def _extract_system_prompt(request: AnthropicRequest) -> str | None:
                 parts.append(text)
         return "\n".join(parts) if parts else None
     return None
+
+
+def _resolved_system_prompt(request: AnthropicRequest) -> str | None:
+    """Return the upstream system prompt content to send.
+
+    Uses the repository-level optimized prompt whenever the incoming request
+    contains a system prompt.
+
+    Args:
+        request: AnthropicRequest - The incoming Anthropic-formatted request.
+
+    Returns:
+        str | None - Optimized system prompt content, or None.
+    """
+    system_prompt = _extract_system_prompt(request)
+    if not system_prompt:
+        return None
+    return load_optimized_system_prompt()
 
 
 _STRIP_SCHEMA_KEYS = frozenset({
@@ -326,10 +345,10 @@ def to_gemini_request(
         "contents": _build_contents(request),
     }
 
-    system_prompt = _extract_system_prompt(request)
+    system_prompt = _resolved_system_prompt(request)
     if system_prompt:
         body["systemInstruction"] = {
-            "parts": [{"text": ""}],
+            "parts": [{"text": system_prompt}],
         }
 
     gen_config: dict[str, Any] = {}

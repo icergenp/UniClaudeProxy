@@ -1,5 +1,6 @@
 import json
 import logging
+import os
 import traceback
 import uuid
 from contextlib import asynccontextmanager
@@ -27,6 +28,8 @@ from app.react import transform_request as react_transform_request
 from app.react import transform_response as react_transform_response
 from app.react import transform_stream as react_transform_stream
 
+_BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
@@ -35,10 +38,17 @@ logger = logging.getLogger("uniclaudeproxy")
 
 debug_logger = logging.getLogger("uniclaudeproxy.debug")
 debug_logger.setLevel(logging.DEBUG)
-_debug_handler = logging.FileHandler("debug.log", mode="a", encoding="utf-8")
+_debug_handler = logging.FileHandler(os.path.join(_BASE_DIR, "..", "debug.log"), mode="a", encoding="utf-8")
 _debug_handler.setFormatter(logging.Formatter("%(asctime)s %(message)s"))
 debug_logger.addHandler(_debug_handler)
 debug_logger.propagate = False
+
+system_logger = logging.getLogger("uniclaudeproxy.system")
+system_logger.setLevel(logging.DEBUG)
+_system_handler = logging.FileHandler(os.path.join(_BASE_DIR, "..", "system_prompts.log"), mode="a", encoding="utf-8")
+_system_handler.setFormatter(logging.Formatter("%(asctime)s %(message)s"))
+system_logger.addHandler(_system_handler)
+system_logger.propagate = False
 
 
 @asynccontextmanager
@@ -204,6 +214,8 @@ async def create_message(request: Request) -> Any:
     replacements = route.model_config.system_replacements
     if replacements:
         system = body.get("system")
+        if system is not None:
+            system_logger.info("ORIGINAL SYSTEM PROMPT:\n%s", json.dumps(system, indent=2, default=str))
         if isinstance(system, str):
             for target, replacement in replacements.items():
                 system = system.replace(target, replacement)
